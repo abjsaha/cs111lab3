@@ -968,7 +968,7 @@ remove_block(ospfs_inode_t *oi)
 		{
 			uint32_t* ptr2=ospfs_block(oi->oi_indirect2);
 			uint32_t* ptr=ospfs_block(ptr2[indir_index(n)]);
-			int offset=(n-OSPFS_NINDIRECT-OSPFS_NDIRECT)%OSPFS_NINDIRECT;
+			uint32_t offset=(n-OSPFS_NINDIRECT-OSPFS_NDIRECT)%OSPFS_NINDIRECT;
 			free_block(ptr[offset]);
 			ptr[offset]=0;
 			if(offset==1)//deallocate 1st indirect block
@@ -1145,7 +1145,9 @@ ospfs_read(struct file *filp, char __user *buffer, size_t count, loff_t *f_pos)
 	// Make sure we don't read past the end of the file!
 	// Change 'count' so we never read past the end of the file.
 	/* EXERCISE: Your code here */
-
+	size_t sizeOfFile=oi->oi_size-*f_pos;
+	if(count>sizeOfFile)
+		count=sizeOfFile;
 	// Copy the data to user block by block
 	while (amount < count && retval >= 0) {
 		uint32_t blockno = ospfs_inode_blockno(oi, *f_pos);
@@ -1165,9 +1167,15 @@ ospfs_read(struct file *filp, char __user *buffer, size_t count, loff_t *f_pos)
 		// into user space.
 		// Use variable 'n' to track number of bytes moved.
 		/* EXERCISE: Your code here */
-		retval = -EIO; // Replace these lines
-		goto done;
-
+		n=count-amount;
+		uint32_t offset=*f_pos%OSPFS_BLKSIZE;
+		if(n>OSPFS_BLKSIZE-offset)
+			n=OSPFS_BLKSIZE-offset;
+		if(copy_to_user(buffer,data+offset,n))
+		{
+			retval=-EFAULT;
+			goto done;
+		}
 		buffer += n;
 		amount += n;
 		*f_pos += n;
