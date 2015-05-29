@@ -1033,19 +1033,53 @@ change_size(ospfs_inode_t *oi, uint32_t new_size)
 {
 	uint32_t old_size = oi->oi_size;
 	int r = 0;
-
-	while (ospfs_size2nblocks(oi->oi_size) < ospfs_size2nblocks(new_size)) {
-	        /* EXERCISE: Your code here */
-		return -EIO; // Replace this line
+	int count=0;
+	if(ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))
+	{
+		while(r&&ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))
+		{
+				r=add_block(oi);
+				count++;
+		}
+		if(r<0)
+		{
+			if(count>1)
+			{
+				while(count!=0)
+				{
+					remove_block(oi);
+					count--;
+				}
+			}
+			oi->oi_size=old_size;
+			return r;
+		}
 	}
-	while (ospfs_size2nblocks(oi->oi_size) > ospfs_size2nblocks(new_size)) {
-	        /* EXERCISE: Your code here */
-		return -EIO; // Replace this line
+	else if(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
+	{
+		while(r&&ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
+		{
+			r=remove_block(oi);
+			count++;
+		}
+		if(r<0)
+		{
+			if(count>1)
+			{
+				while(count!=0)
+				{
+					add_block(oi);
+					count--;
+				}
+			}
+			oi->oi_size=old_size;
+			return r;
+		}
 	}
-
 	/* EXERCISE: Make sure you update necessary file meta data
 	             and return the proper value. */
-	return -EIO; // Replace this line
+	oi->oi_size=new_size;
+	return 0;
 }
 
 
