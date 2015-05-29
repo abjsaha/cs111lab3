@@ -1369,7 +1369,22 @@ create_blank_direntry(ospfs_inode_t *dir_oi)
 static int
 ospfs_link(struct dentry *src_dentry, struct inode *dir, struct dentry *dst_dentry) {
 	/* EXERCISE: Your code here. */
-	return -EINVAL;
+	if(dst_dentry->d_name.len>OSPFS_MAXNAMELEN)//check name length
+		return -ENAMETOOLONG;
+	ospfs_inode_t* dir_oi=ospfs_inode(dir->i_ino);//get pointer to inode struct of directory in which to create hard link
+	if(find_direntry(dir_oi,dst_dentry->d_name.name,dst_dentry->d_name.len))//check if file already exists in dir
+		return -EEXIST;
+	ospfs_inode_t* newDir=create_blank_direntry(dir_oi);//creating the hard link file
+	if(IS_ERR(newDir))//checking if file was successfuly created
+		return PTR_ERR(newDir);
+	ospfs_inode_t* inc=(src_dentry->d_inode->i_ino);//getting pointer to inode structure to increment link count
+	if(!inc)
+		return -EIO;
+	inc->oi_nlink++;//increment link count
+	newDir->od_ino=src_dentry->d_inode->i_ino;//set same inode
+	memcpy(newDir>od_name,dst_dentry->d_name.name,dst_dentry->d_name.len);//set same name
+	newDir->od_name[dst_dentry->d_name.len]='\0';//ensure last character of name is null byte
+	return 0;
 }
 
 // ospfs_create
