@@ -1464,7 +1464,7 @@ ospfs_create(struct inode *dir, struct dentry *dentry, int mode, struct nameidat
 		return -ENOSPC;
 	newDir->od_ino=i;//store new file
 	memcpy(newDir->od_name,dentry->d_name.name,dentry->d_name.len);//change name
-	newDir->od_name[dst_dentry->d_name.len]='\0';//set last character to null byte
+	newDir->od_name[dentry->d_name.len]='\0';//set last character to null byte
 	//setting default parameters of inode
 	ospfs_inode_t* newINode=ospfs_inode(i);
 	newINode->oi_ftype=OSPFS_FTYPE_REG;
