@@ -864,7 +864,7 @@ add_block(ospfs_inode_t *oi)
 	{
 		if (oi->oi_indirect != 0)
 		{
-			indir = io->io_indirect;
+			indir = oi->oi_indirect;
 			indir_data = ospfs_block(indir);
 		}
 		else if (oi->oi_indirect == 0) 
