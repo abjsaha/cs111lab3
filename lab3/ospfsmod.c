@@ -1374,7 +1374,7 @@ ospfs_link(struct dentry *src_dentry, struct inode *dir, struct dentry *dst_dent
 	ospfs_inode_t* dir_oi=ospfs_inode(dir->i_ino);//get pointer to inode struct of directory in which to create hard link
 	if(find_direntry(dir_oi,dst_dentry->d_name.name,dst_dentry->d_name.len))//check if file already exists in dir
 		return -EEXIST;
-	ospfs_inode_t* newDir=create_blank_direntry(dir_oi);//creating the hard link file
+	ospfs_direntry_t* newDir=create_blank_direntry(dir_oi);//creating the hard link file
 	if(IS_ERR(newDir))//checking if file was successfuly created
 		return PTR_ERR(newDir);
 	ospfs_inode_t* inc=(src_dentry->d_inode->i_ino);//getting pointer to inode structure to increment link count
