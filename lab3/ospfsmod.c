@@ -871,13 +871,12 @@ add_block(ospfs_inode_t *oi)
 			{
 				return -ENOSPC;
 			}
-				oi->oi_indirect = allocated[0];
-				indir = allocated[0];
-				indir_data = ospfs_block(indir);
-				for (i=0; i<256; i++)
-				{
-					indir_data[i] = 0;
-				}
+			oi->oi_indirect = allocated[0];
+			indir = allocated[0];
+			indir_data = ospfs_block(indir);
+			for (i=0; i<256; i++)
+			{
+				indir_data[i] = 0;
 			}
 		}
 		
@@ -964,7 +963,7 @@ remove_block(ospfs_inode_t *oi)
 	}
 	else//if it is a doubley indirect
 	{
-		if(oi_indirect2>0)
+		if(oi->oi_indirect2>0)
 		{
 			uint32_t* ptr2=ospfs_block(oi->oi_indirect2);
 			uint32_t* ptr=ospfs_block(ptr2[indir_index(n)]);
