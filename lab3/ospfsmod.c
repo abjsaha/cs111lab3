@@ -785,9 +785,9 @@ add_block(ospfs_inode_t *oi)
 	
 	else if (indir2_index(n) == 0) // allocate an doubly indirect block
 	{
-		if (oi->oi_indirect1 != 0) // already a doubly indirect block
+		if (oi->oi_indirect != 0) // already a doubly indirect block
 		{
-			indir2 = io->io_indirect2;
+			indir2 = oi->oi_indirect2;
 			indir2_data = ospfs_block(indir2);
 		}
 		else if (oi->oi_indirect2 == 0) // no allocated doubly indirect block yet
@@ -800,6 +800,7 @@ add_block(ospfs_inode_t *oi)
 			oi->oi_indirect2 = allocated[1];
 			indir2_data = ospfs_block(allocated[1]);
 			indir2 = allocated[1];
+			int i;
 			for(i=0; i < 256; i++)
 			{
 				indir2_data[i] = 0;
@@ -850,7 +851,7 @@ add_block(ospfs_inode_t *oi)
 		indir_data[direct_index(n)] = final_dir;
 		dir_data = ospfs_block(final_dir);
 		oi->oi_size += OSPFS_BLKSIZE;
-		for (i=0; i<NDIRECT; i++)
+		for (i=0; i<OSPFS_NDIRECT; i++)
 		{
 			dir_data[i] = 0;
 		}
