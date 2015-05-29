@@ -1382,7 +1382,7 @@ ospfs_link(struct dentry *src_dentry, struct inode *dir, struct dentry *dst_dent
 		return -EIO;
 	inc->oi_nlink++;//increment link count
 	newDir->od_ino=src_dentry->d_inode->i_ino;//set same inode
-	memcpy(newDir>od_name,dst_dentry->d_name.name,dst_dentry->d_name.len);//set same name
+	memcpy(newDir->od_name,dst_dentry->d_name.name,dst_dentry->d_name.len);//set same name
 	newDir->od_name[dst_dentry->d_name.len]='\0';//ensure last character of name is null byte
 	return 0;
 }
