@@ -820,12 +820,12 @@ remove_block(ospfs_inode_t *oi)
 		return -EIO;
 	if(indir2_index(n)==-1)//if it is not a doubley indirect
 	{
-		if(indir_index(n)==-1)//if it is a indirect
+		if(indir_index(n)==-1)//if it is not a indirect
 		{
 			free_block(oi->oi_direct[n]);
 			oi->oi_direct[n]=0;
 		}
-		else//if it is not a indirect
+		else//if it is a indirect
 		{
 			if(oi->oi_indirect>0)
 			{
@@ -836,7 +836,7 @@ remove_block(ospfs_inode_t *oi)
 				if(n==OSPFS_NDIRECT+1)
 				{
 					free_block(oi->oi_indirect);
-					oi->oi_indirect;
+					oi->oi_indirect=0;
 				}
 			}
 			else
@@ -870,7 +870,7 @@ remove_block(ospfs_inode_t *oi)
 			return -EIO;
 		}
 	}
-	oi->oi_size=OSPFS_BLKSIZE*(n-1);
+	oi->oi_size-=OSPFS_BLKSIZE;
 	return 0;
 }
 
