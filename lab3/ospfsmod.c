@@ -897,6 +897,7 @@ add_block(ospfs_inode_t *oi)
 		indir_data[direct_index(n)] = final_dir;
 		dir_data = ospfs_block(final_dir);
 		oi->oi_size += OSPFS_BLKSIZE;
+		int i;
 		for (i=0; i<OSPFS_NDIRECT; i++)
 		{
 			dir_data[i] = 0;
