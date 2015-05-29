@@ -877,6 +877,7 @@ add_block(ospfs_inode_t *oi)
 			oi->oi_indirect = allocated[0];
 			indir = allocated[0];
 			indir_data = ospfs_block(indir);
+			int i;
 			for (i=0; i<256; i++)
 			{
 				indir_data[i] = 0;
