@@ -758,7 +758,12 @@ add_block(ospfs_inode_t *oi)
 	// keep track of allocations to free in case of -ENOSPC
 	uint32_t *allocated[2] = { 0, 0 };
 	uint32_t dir;
+	uint32_t indir;
+	uint32_t indir2;
 	uint32_t *dir_data;
+	uint32_t *indir_data;
+	uint32_t *indir2_data;
+	uint32_t final_dir;
 
 	if (indir_index(n) == -1) // allocate a direct block
 	{
@@ -769,7 +774,7 @@ add_block(ospfs_inode_t *oi)
 		}
 		dir_data = ospfs_block(dir);
 		int i;
-		for(i=0; i < NDIRECT; i++)
+		for(i=0; i < OSPFS_NDIRECT; i++)
 		{
 			dir_data[i] = 0;
 		}
@@ -778,10 +783,122 @@ add_block(ospfs_inode_t *oi)
 		return 0;
 	}
 	
-	else if (indir2_index(n) == 0) // allocate an double indirect block
+	else if (indir2_index(n) == 0) // allocate an doubly indirect block
 	{
-		if (oi->oi_indirect2 == 0)
-		{}
+		if (oi->oi_indirect1 != 0) // already a doubly indirect block
+		{
+			indir2 = io->io_indirect2;
+			indir2_data = ospfs_block(indir2);
+		}
+		else if (oi->oi_indirect2 == 0) // no allocated doubly indirect block yet
+		{
+			allocated[1] = allocate_block();
+			if(allocated[1] == 0)
+			{
+				return -ENOSPC;
+			}
+			oi->oi_indirect2 = allocated[1];
+			indir2_data = ospfs_block(allocated[1]);
+			indir2 = allocated[1];
+			for(i=0; i < 256; i++)
+			{
+				indir2_data[i] = 0;
+			}
+		}
+		
+		// allocate indirect blocks of the doubly indirect block
+		if (oi->oi_indirect != 0)
+		{
+			indir = io->io_indirect;
+			indir_data = ospfs_block(indir);
+		}
+		else if (oi->oi_indirect == 0) 
+		{
+			allocated[0] = allocate_block();
+			if(allocated[0] == 0)
+			{
+				if (allocated[1] != 0)
+				{
+					free_block(allocated[1]);
+					return -ENOSPC;
+				}
+				oi->oi_indirect = allocated[0];
+				indir = allocated[0];
+				indir2_data[indir_index(n)] = indir;
+				indir_data = ospfs_block(indir);
+				for (i=0; i<256; i++)
+				{
+					indir_data[i] = 0;
+				}
+			}
+		}
+		
+		// direct blocks
+		final_dir = allocate_block();
+		if (final_dir == 0)
+		{
+			if (allocated[0] != 0)
+			{
+				free_block(allocated[0]);
+			}
+			if (allocated[1] != 0)
+			{
+				free_block(allocated[1]);
+			}
+			return -ENOSPC;
+		}
+		indir_data[direct_index(n)] = final_dir;
+		dir_data = ospfs_block(final_dir);
+		oi->oi_size += OSPFS_BLKSIZE;
+		for (i=0; i<NDIRECT; i++)
+		{
+			dir_data[i] = 0;
+		}
+		return 0;
+	}
+
+	else // allocate indirect block
+	{
+		if (oi->oi_indirect != 0)
+		{
+			indir = io->io_indirect;
+			indir_data = ospfs_block(indir);
+		}
+		else if (oi->oi_indirect == 0) 
+		{
+			allocated[0] = allocate_block();
+			if(allocated[0] == 0)
+			{
+				return -ENOSPC;
+			}
+				oi->oi_indirect = allocated[0];
+				indir = allocated[0];
+				indir_data = ospfs_block(indir);
+				for (i=0; i<256; i++)
+				{
+					indir_data[i] = 0;
+				}
+			}
+		}
+		
+		// direct blocks
+		final_dir = allocate_block();
+		if (final_dir == 0)
+		{
+			if (allocated[0] != 0)
+			{
+				free_block(allocated[0]);
+			}
+			return -ENOSPC;
+		}
+		indir_data[direct_index(n)] = final_dir;
+		dir_data = ospfs_block(final_dir);
+		oi->oi_size += OSPFS_BLKSIZE;
+		for (i=0; i<OSPFS_NDIRECT; i++)
+		{
+			dir_data[i] = 0;
+		}
+		return 0;
 	}
 }
 
