@@ -1476,7 +1476,7 @@ ospfs_create(struct inode *dir, struct dentry *dentry, int mode, struct nameidat
 	int j=0;
 	while(j<OSPFS_NDIRECT)
 	{
-		newINode->oi_direct[k]=0;
+		newINode->oi_direct[j]=0;
 		j++;
 	}
 	entry_ino=newDir->od_ino;
