@@ -17,8 +17,8 @@ Email: jasminemok@ucla.edu
 
 # Partner 2 (if you're working in a team)
 Name: Abhijoy Saha
-Student ID: 
-Email: 
+Student ID: 004252758
+Email: abhijoysaha25@gmail.com
 
 # Extra credit problems
 #Extra credit problem: none
