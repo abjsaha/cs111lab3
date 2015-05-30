@@ -1522,8 +1522,40 @@ ospfs_symlink(struct inode *dir, struct dentry *dentry, const char *symname)
 	uint32_t entry_ino = 0;
 
 	/* EXERCISE: Your code here. */
-	return -EINVAL;
-
+	if(!dir_oi)
+		return -EIO;
+	if(dentry->d_name.len>OSPFS_MAXNAMELEN||strlen(symname)>OSPFS_MAXNAMELEN)//check name length
+		return -ENAMETOOLONG;
+	if(find_direntry(dir_oi,dentry->d_name.name,dentry->d_name.len))//check if file already exists in dir
+		return -EEXIST;
+	int i=ospfs_super->os_firstinob;//set to first inode
+	int flg=0;
+	while(i<ospfs_super->os_ninodes)//iterate through inodes until first free inode is found
+	{
+		if(!ospfs_inode(i)->oi_nlink)
+		{
+			flg=1;
+			break;
+		}
+		i++;
+	}
+	if(!flg)//if no free inodes found
+		return -ENOSPC;
+	ospfs_symlink_inode_t* newSymLink=(ospfs_symlink_inode_t*)ospfs_inode(i);//create empty node
+	newSymLink->oi_ftype=OSPFS_FTYPE_SYMLINK;//set type for node
+	newSymLink->oi_size=strlen(symname);//set size for node
+	newSymLink->oi_nlink=1;
+	memcpy(newSymLink->oi_symlink,symname,newSymLink->oi_size);//set name
+	ospfs_direntry_t* newDir=create_blank_direntry(dir_oi);
+	if(IS_ERR(newDir))//checking if the file was successfully created
+		return PTR_ERR(newDir);
+	newDir->od_ino=i;//store new file
+	memcpy(newDir->od_name,dentry->d_name.name,dentry->d_name.len);//change name
+	newDir->od_name[dentry->d_name.len]='\0';//set last character to null byte
+	char* q=strpbrk(symname,"?");
+	char* c=strpbrk(symname,":");
+	if(q&&c)
+		memcpy(newSymLink->oi_symlink+newSymLink->oi_size+1,q,c-q-1);//conditional symbolic links
 	/* Execute this code after your function has successfully created the
 	   file.  Set entry_ino to the created file's inode number before
 	   getting here. */
