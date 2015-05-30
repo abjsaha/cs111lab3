@@ -1575,8 +1575,25 @@ ospfs_follow_link(struct dentry *dentry, struct nameidata *nd)
 		(ospfs_symlink_inode_t *) ospfs_inode(dentry->d_inode->i_ino);
 	// Exercise: Your code here.
 
-	nd_set_link(nd, oi->oi_symlink);
-	return (void *) 0;
+	char *question_mark = strpbrk(oi->oi_symlink, "?");
+	char *colon = strpbrk(oi->oi_symlink, ":");
+
+	if (question_mark && colon)
+	{
+		if (current->uid == 0)
+		{
+			nd_set_link(nd, colon+1);
+		}
+		else
+		{
+			nd_set_link(nd, oi->oi_symlink+strlen(oi->oi_symlink)+1);
+		}
+		else
+		{
+			nd_set_link(nd, oi->oi_symlink);
+		}
+		return (void *) 0;
+	}
 }
 
 
