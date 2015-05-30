@@ -1037,46 +1037,31 @@ change_size(ospfs_inode_t *oi, uint32_t new_size)
 {
 	uint32_t old_size = oi->oi_size;
 	int r = 0;
-	int count=0;
 	if(ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))
 	{
 		while(r&&ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))
 		{
 				r=add_block(oi);
-				count++;
 		}
 		if(r<0)
 		{
-			if(count>1)
+			while(ospfs_size2nblocks(oi->oi_size)>old_size+OSPFS_BLKSIZE-1)
 			{
-				while(count!=0)
-				{
-					remove_block(oi);
-					count--;
-				}
+				remove_block(oi);
 			}
 			oi->oi_size=old_size;
 			return r;
 		}
+		oi->oi_size-=OSPFS_BLKSIZE-(old_size%OSPFS_BLKSIZE);
 	}
 	else if(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
 	{
 		while(r&&ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
 		{
 			r=remove_block(oi);
-			count++;
 		}
 		if(r<0)
 		{
-			if(count>1)
-			{
-				while(count!=0)
-				{
-					add_block(oi);
-					count--;
-				}
-			}
-			oi->oi_size=old_size;
 			return r;
 		}
 	}
@@ -1217,13 +1202,13 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 	// Support files opened with the O_APPEND flag.  To detect O_APPEND,
 	// use struct file's f_flags field and the O_APPEND bit.
 	/* EXERCISE: Your code here */
-	if(O_APPEND & filp->f_flags)
+	if(filp->f_flags & O_APPEND)
 		*f_pos=oi->oi_size;
 	// If the user is writing past the end of the file, change the file's
 	// size to accomodate the request.  (Use change_size().)
 	/* EXERCISE: Your code here */
 	size_t sizeOfFile=oi->oi_size-*f_pos;
-	if(count>sizeOfFile)
+	if(count>=sizeOfFile)
 	{
 		retval=change_size(oi,count+*f_pos);
 		if(retval<0)
