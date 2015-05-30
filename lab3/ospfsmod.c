@@ -1580,7 +1580,7 @@ ospfs_follow_link(struct dentry *dentry, struct nameidata *nd)
 
 	if (question_mark && colon)
 	{
-		if (current->uid == 0)
+		if (current->uid)
 		{
 			nd_set_link(nd, colon+1);
 		}
@@ -1588,12 +1588,12 @@ ospfs_follow_link(struct dentry *dentry, struct nameidata *nd)
 		{
 			nd_set_link(nd, oi->oi_symlink+strlen(oi->oi_symlink)+1);
 		}
-		else
-		{
-			nd_set_link(nd, oi->oi_symlink);
-		}
-		return (void *) 0;
 	}
+	else
+	{
+		nd_set_link(nd, oi->oi_symlink);
+	}
+	return (void *) 0;
 }
 
 
