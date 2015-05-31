@@ -1040,24 +1040,26 @@ change_size(ospfs_inode_t *oi, uint32_t new_size)
 	int r = 0;
 	if(ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))
 	{
-		while(r&&ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))
+		while(ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))
 		{
 				r=add_block(oi);
+				if(r<0)
+					break;
 		}
 		if(r<0)
 		{
-			while(ospfs_size2nblocks(oi->oi_size)>old_size+OSPFS_BLKSIZE-1)
+			while(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
 			{
 				remove_block(oi);
 			}
 			oi->oi_size=old_size;
 			return r;
 		}
-		oi->oi_size-=OSPFS_BLKSIZE-(old_size%OSPFS_BLKSIZE);
+		//oi->oi_size-=OSPFS_BLKSIZE-(old_size%OSPFS_BLKSIZE);
 	}
 	else if(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
 	{
-		while(r&&ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
+		while(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
 		{
 			r=remove_block(oi);
 		}
