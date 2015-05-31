@@ -1208,13 +1208,12 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 	// If the user is writing past the end of the file, change the file's
 	// size to accomodate the request.  (Use change_size().)
 	/* EXERCISE: Your code here */
-	size_t sizeOfFile=oi->oi_size-*f_pos;
-	if(count>=sizeOfFile)
+	if((count+*f_pos)>oi_size)
 	{
 		retval=change_size(oi,count+*f_pos);
 		if(retval<0)
 		{
-			return retval;
+			goto done;
 		}
 		else
 			sizeOfFile=count+*f_pos;
@@ -1237,10 +1236,10 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 		// read user space.
 		// Keep track of the number of bytes moved in 'n'.
 		/* EXERCISE: Your code here */
-		n=count-amount;
 		uint32_t offset=*f_pos%OSPFS_BLKSIZE;
-		if(n>OSPFS_BLKSIZE-offset)
-			n=OSPFS_BLKSIZE-offset;
+		n=OSPFS_BLKSIZE-offset;
+		if(n>count-amount)
+			n=count-amount;
 		if(copy_from_user(data+offset,buffer,n))
 		{
 			retval=-EFAULT;
