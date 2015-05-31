@@ -938,60 +938,48 @@ remove_block(ospfs_inode_t *oi)
 	uint32_t n = ospfs_size2nblocks(oi->oi_size);
 
 	/* EXERCISE: Your code here */
-	if(n<=0)
+	if(n<0)
 		return -EIO;
-	if(indir2_index(n)==-1)//if it is not a doubley indirect
+	else if(n==0)
+		return 0;
+	n=n-1;
+	if(n<OSPFS_NDIRECT)
 	{
-		if(indir_index(n)==-1)//if it is not a indirect
+		free_block(oi->oi_direct[n]);
+		oi->oi_direct[n]=0;
+	}
+	else if(n< OSPFS_NDIRECT+OSPFS_NINDIRECT)
+	{
+		uint32_t* ptr=ospfs_block(oi->oi_indirect);
+		free_block(ptr[direct_index(n)]);
+		ptr[direct_index(n)]=0;
+		//if block is only block in indirect then deallocate entire indirect
+		if(direct_index(n)==0)
 		{
-			free_block(oi->oi_direct[n]);
-			oi->oi_direct[n]=0;
-		}
-		else//if it is a indirect
-		{
-			if(oi->oi_indirect>0)
-			{
-				uint32_t* ptr=ospfs_block(oi->oi_indirect);
-				free_block(ptr[direct_index(n)]);
-				ptr[direct_index(n)]=0;
-				//if block is only block in indirect then deallocate entire indirect
-				if(n==OSPFS_NDIRECT+1)
-				{
-					free_block(oi->oi_indirect);
-					oi->oi_indirect=0;
-				}
-			}
-			else
-			{
-				return -EIO;
-			}
+			free_block(oi->oi_indirect);
+			oi->oi_indirect=0;
 		}
 	}
-	else//if it is a doubley indirect
+	else if(n>=OSPFS_NDIRECT+OSPFS_NINDIRECT)
 	{
-		if(oi->oi_indirect2>0)
+		uint32_t* ptr2=ospfs_block(oi->oi_indirect2);
+		uint32_t* ptr=ospfs_block(ptr2[indir_index(n)]);
+		uint32_t offset=(n-OSPFS_NINDIRECT-OSPFS_NDIRECT)%OSPFS_NINDIRECT;
+		free_block(ptr[offset]);
+		ptr[offset]=0;
+		if(offset==1)//deallocate 1st indirect block
 		{
-			uint32_t* ptr2=ospfs_block(oi->oi_indirect2);
-			uint32_t* ptr=ospfs_block(ptr2[indir_index(n)]);
-			uint32_t offset=(n-OSPFS_NINDIRECT-OSPFS_NDIRECT)%OSPFS_NINDIRECT;
-			free_block(ptr[offset]);
-			ptr[offset]=0;
-			if(offset==1)//deallocate 1st indirect block
-			{
-				free_block(ptr2[indir_index(n)]);
-				ptr2[indir_index(n)]=0;
-			}
-			if(n==OSPFS_NINDIRECT+OSPFS_NDIRECT+1)
-			{
-				free_block(oi->oi_indirect2);
-				oi->oi_indirect2=0;
-			}
+			free_block(ptr2[indir_index(n)]);
+			ptr2[indir_index(n)]=0;
 		}
-		else
+		if(n==OSPFS_NINDIRECT+OSPFS_NDIRECT+1)
 		{
-			return -EIO;
+			free_block(oi->oi_indirect2);
+			oi->oi_indirect2=0;
 		}
 	}
+	else
+		return -EIO;
 	oi->oi_size-=OSPFS_BLKSIZE;
 	return 0;
 }
