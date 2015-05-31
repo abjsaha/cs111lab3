@@ -1208,7 +1208,7 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 	// If the user is writing past the end of the file, change the file's
 	// size to accomodate the request.  (Use change_size().)
 	/* EXERCISE: Your code here */
-	if((count+*f_pos)>oi_size)
+	if((count+*f_pos)>oi->oi_size)
 	{
 		retval=change_size(oi,count+*f_pos);
 		if(retval<0)
