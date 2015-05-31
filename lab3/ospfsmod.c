@@ -1215,8 +1215,6 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 		{
 			goto done;
 		}
-		else
-			sizeOfFile=count+*f_pos;
 	}
 	// Copy data block by block
 	while (amount < count && retval >= 0) {
