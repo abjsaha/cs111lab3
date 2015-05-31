@@ -418,7 +418,7 @@ ospfs_dir_lookup(struct inode *dir, struct dentry *dentry, struct nameidata *ign
 //   Returns: 1 at end of directory, 0 if filldir returns < 0 before the end
 //     of the directory, and -(error number) on error.
 //
-//   EXERCISE: Finish implementing this function. //TESTES
+//   EXERCISE: Finish implementing this function.
 
 static int
 ospfs_dir_readdir(struct file *filp, void *dirent, filldir_t filldir)
@@ -515,7 +515,7 @@ ospfs_dir_readdir(struct file *filp, void *dirent, filldir_t filldir)
 //
 //   Returns: 0 if success and -ENOENT on entry not found.
 //
-//   EXERCISE: Make sure that deleting symbolic links works correctly. // TESTES
+//   EXERCISE: Make sure that deleting symbolic links works correctly.
 
 static int
 ospfs_unlink(struct inode *dirino, struct dentry *dentry)
@@ -579,8 +579,7 @@ ospfs_unlink(struct inode *dirino, struct dentry *dentry)
 static uint32_t
 allocate_block(void)
 {
-	/* EXERCISE: Your code here */ //TESTES
-	//void *bit_map = ospfs_block(OSPFS_FREEMAP_BLK);
+	/* EXERCISE: Your code here */
 	int i; // boot sector, superblock, and bitmap are never free
 	for(i = 3; i < ospfs_super->os_nblocks; i++)
 	{
@@ -608,7 +607,7 @@ allocate_block(void)
 static void
 free_block(uint32_t blockno)
 {
-	/* EXERCISE: Your code here */ // TESTES
+	/* EXERCISE: Your code here */
 	if (blockno > ospfs_super->os_firstinob && blockno <= ospfs_super->os_nblocks)
 	{
 		bitvector_set(ospfs_block(OSPFS_FREEMAP_BLK), blockno);
@@ -643,7 +642,7 @@ free_block(uint32_t blockno)
 // Returns: 0 if block index 'b' requires using the doubly indirect
 //	       block, -1 if it does not.
 //
-// EXERCISE: Fill in this function. // TESTES
+// EXERCISE: Fill in this function.
 
 static int32_t
 indir2_index(uint32_t b)
@@ -664,7 +663,7 @@ indir2_index(uint32_t b)
 //	    otherwise, the offset of the relevant indirect block within
 //		the doubly indirect block.
 //
-// EXERCISE: Fill in this function. // TESTES
+// EXERCISE: Fill in this function.
 
 static int32_t
 indir_index(uint32_t b)
@@ -696,7 +695,7 @@ indir_index(uint32_t b)
 // Returns: the index of block b in the relevant indirect block or the direct
 //	    block array.
 //
-// EXERCISE: Fill in this function.	//TESTES
+// EXERCISE: Fill in this function.
 
 static int32_t
 direct_index(uint32_t b)
@@ -1026,24 +1025,24 @@ change_size(ospfs_inode_t *oi, uint32_t new_size)
 {
 	uint32_t old_size = oi->oi_size;
 	int r = 0;
-	while(ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))
+	while(ospfs_size2nblocks(oi->oi_size)<ospfs_size2nblocks(new_size))//if adding size
 	{
 			r=add_block(oi);
 			if(r<0)
 				break;
 			else if(r==-EIO)
 				return -EIO;
-			else if (r==-ENOSPC)
+			else if (r==-ENOSPC)//if no space error
 			{
-				while(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
+				while(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))//remove extra space
 				{
 					remove_block(oi);
 				}
-				oi->oi_size=old_size;
+				oi->oi_size=old_size;//revert size back to old isze
 				return r;
 			}
 	}
-	while(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))
+	while(ospfs_size2nblocks(oi->oi_size)>ospfs_size2nblocks(new_size))//if removing size
 	{
 		r=remove_block(oi);
 		if(r<0)
@@ -1051,7 +1050,7 @@ change_size(ospfs_inode_t *oi, uint32_t new_size)
 	}
 	/* EXERCISE: Make sure you update necessary file meta data
 	             and return the proper value. */
-	oi->oi_size=new_size;
+	oi->oi_size=new_size;//make size the new size
 	return 0;
 }
 
